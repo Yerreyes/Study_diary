@@ -1,0 +1,23 @@
+{
+  "name": "study-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "main": "main.js",
+  "scripts": {
+    "start": "concurrently \"npm run start-client --workspace=client\" \"npm run start-server --workspace=server\"",
+    "start-electron": "electron ."
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "electron": "^25.0.0"
+  },
+  "dependencies": {
+    "concurrently": "^9.2.1",
+    "pg": "^8.20.0",
+    "winston": "^3.19.0"
+  }
+}
