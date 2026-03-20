@@ -1,4 +1,4 @@
-﻿@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap');
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
   --pink:#f472b6; --pink-soft:#fce7f3; --pink-pale:#fff0f8;
@@ -74,6 +74,34 @@ body{background:#f5f0ff;}
 .custom-inp:focus{border-color:var(--lilac);}
 .note-inp{width:100%;background:var(--lilac-pale);border:1.5px solid var(--lilac-soft);border-radius:11px;padding:9px 13px;font-size:12.5px;font-family:'Plus Jakarta Sans',sans-serif;color:#6d28d9;outline:none;}
 .note-inp:focus{border-color:var(--lilac);}
+.date-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.date-inp{flex:1;min-width:140px;background:var(--lilac-pale);border:1.5px solid var(--lilac-soft);border-radius:11px;padding:9px 13px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:#6d28d9;outline:none;}
+.date-inp:focus{border-color:var(--lilac);}
+.date-today-btn{background:none;border:none;cursor:pointer;font-size:11px;font-weight:600;color:#7c3aed;letter-spacing:.4px;padding:8px 12px;border-radius:10px;transition:background .15s;font-family:'Plus Jakarta Sans',sans-serif;}
+.date-today-btn:hover:not(:disabled){background:var(--lilac-soft);}
+.date-today-btn:disabled{opacity:.35;cursor:default;}
+.date-sub-picker{display:flex;align-items:center;gap:8px;margin-top:2px;}
+.date-change-wrap{position:relative;display:inline-flex;align-items:center;}
+.date-change-btn{
+  background:none;
+  border:none;
+  border-radius:10px;
+  padding:6px 8px;
+  font-size:13px;
+  color:#7c3aed;
+  cursor:pointer;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  letter-spacing:.1px;
+  line-height:1;
+}
+.date-change-btn:hover{background:var(--lilac-soft);}
+.date-inline-inp{
+  position:absolute;
+  inset:0;
+  opacity:0;
+  cursor:pointer;
+  z-index:2;
+}
 .add-btn{width:100%;padding:13px;border-radius:100px;border:none;cursor:pointer;font-size:13.5px;font-family:'Lora',serif;font-style:italic;letter-spacing:.5px;transition:all .3s;}
 .add-btn.idle{background:linear-gradient(135deg,#c084fc,#7c3aed);color:white;box-shadow:0 4px 18px rgba(124,58,237,.3);}
 .add-btn.ok{background:linear-gradient(135deg,#6ee7b7,#10b981);color:white;}

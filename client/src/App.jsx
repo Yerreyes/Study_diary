@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const CATS = [
   { id: "sql",    label: "SQL",    emoji: "🗄️", color: "#f9a8d4", bg: "#fff0f6", dark: "#be185d" },
@@ -15,7 +15,13 @@ function fmt(minutes) {
   if (m === 0) return `${h}h`;
   return `${h}h ${m}m`;
 }
-function todayKey() { return new Date().toISOString().split("T")[0]; }
+function dateKeyLocal(d) {
+  const y = d.getFullYear();
+  const mo = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${mo}-${day}`;
+}
+function todayKey() { return dateKeyLocal(new Date()); }
 function dayLabel(k) {
   const [y,mo,d] = k.split("-").map(Number);
   const date = new Date(y, mo-1, d);
@@ -73,6 +79,7 @@ export default function App() {
   const [apiError, setApiError] = useState("");
 
   const today = todayKey();
+  const [recordDate, setRecordDate] = useState(todayKey);
   const todaySess = data[today] || [];
   const totalToday = todaySess.reduce((a,s) => a+s.minutes, 0);
 
@@ -97,6 +104,9 @@ export default function App() {
             time: s.time,
           });
         }
+        for (const k of Object.keys(grouped)) {
+          grouped[k].sort((a, b) => (a.id ?? 0) - (b.id ?? 0));
+        }
 
         const g = goal?.goalMin ?? 120;
         setGoalMin(g);
@@ -114,8 +124,9 @@ export default function App() {
   const daysStudied = Object.keys(data).filter(d => (data[d]||[]).length > 0).length;
 
   const last7 = Array.from({length:7}, (_,i) => {
-    const d = new Date(); d.setDate(d.getDate()-(6-i));
-    return d.toISOString().split("T")[0];
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    return dateKeyLocal(d);
   });
   const maxDay = Math.max(...last7.map(d => (data[d]||[]).reduce((a,s)=>a+s.minutes,0)), goalMin, 60);
 
@@ -154,7 +165,7 @@ export default function App() {
     try {
       const timeStr = new Date().toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"});
       const created = await apiPost("/api/sessions", {
-        sessionDate: today,
+        sessionDate: recordDate,
         minutes: total,
         category: cat,
         customLabel: cat==="otro" ? customLabel : "",
@@ -162,14 +173,17 @@ export default function App() {
         sessionTime: timeStr,
       });
 
-      setData(prev => ({...prev, [today]: [...(prev[today]||[]), {
-        id: created.id,
-        minutes: created.minutes,
-        category: created.category,
-        customLabel: created.customLabel,
-        note: created.note,
-        time: created.time,
-      }]}));
+      setData(prev => ({
+        ...prev,
+        [recordDate]: [...(prev[recordDate] || []), {
+          id: created.id,
+          minutes: created.minutes,
+          category: created.category,
+          customLabel: created.customLabel,
+          note: created.note,
+          time: created.time,
+        }].sort((a, b) => (a.id ?? 0) - (b.id ?? 0)),
+      }));
 
       setNote(""); setHrs("0"); setMins("30");
       setAdded(true); setTimeout(()=>setAdded(false), 2000);
@@ -204,6 +218,10 @@ export default function App() {
   }
 
   const todayDateStr = new Date().toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"});
+  const [ry, rmo, rd] = recordDate.split("-").map(Number);
+  const recordDateStr = new Date(ry, (rmo || 1) - 1, rd || 1)
+    .toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long"});
+  const headerDateStr = recordDate === today ? todayDateStr : recordDateStr;
 
   return (
     <div className="app">
@@ -211,7 +229,25 @@ export default function App() {
         <div className="hdr-row">
           <div>
             <div className="brand">study <em>diary</em> 💗</div>
-            <div className="date-sub">{todayDateStr}</div>
+            <div className="date-sub-picker">
+              <span className="date-sub">{headerDateStr}</span>
+              <span className="date-change-wrap">
+                <button type="button" className="date-change-btn" aria-label="Cambiar día">
+                  📅
+                </button>
+                <input
+                  type="date"
+                  className="date-inline-inp"
+                  value={recordDate}
+                  max={today}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (!v) return;
+                    setRecordDate(v > today ? today : v);
+                  }}
+                />
+              </span>
+            </div>
           </div>
           <div className="total-box">
             <div className="total-lbl">hoy</div>
@@ -345,11 +381,13 @@ export default function App() {
               {added ? "✓ ¡Registrado! ✨" : "Registrar sesión 🌸"}
             </button>
 
-            {todaySess.length > 0 && (
+            {(data[recordDate] || []).length > 0 && (
               <div style={{marginTop:20}}>
-                <div className="sec-lbl" style={{marginBottom:9}}>sesiones de hoy</div>
+                <div className="sec-lbl" style={{marginBottom:9}}>
+                  sesiones · {dayLabel(recordDate)}
+                </div>
                 <div className="s-list">
-                  {[...todaySess].reverse().map(s=>{
+                  {(data[recordDate] || []).map(s=>{
                     const c = getCat(s);
                     return (
                       <div key={s.id} className="s-row" style={{borderLeft:`3px solid ${c.color}`, background:c.bg}}>
@@ -362,7 +400,7 @@ export default function App() {
                             <div className="s-time" style={{color:c.dark}}>{fmt(s.minutes)}</div>
                             <div className="s-clock">{s.time}</div>
                           </div>
-                          <button className="s-del" onClick={()=>handleDel(today,s.id)}>✕</button>
+                          <button className="s-del" onClick={()=>handleDel(recordDate,s.id)}>✕</button>
                         </div>
                       </div>
                     );
